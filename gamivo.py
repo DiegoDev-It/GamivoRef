@@ -26,17 +26,22 @@ def text(update, context):
         if x in text_message:
             if "?glv" in text_message:
                 ref_text = text_message.split("?glv")
-                long_url = "https://" + ref_text[0] + ref
+                if "https://" in text_message:
+                    long_url = ref_text[0] + ref
+                else:
+                    long_url = "https://" + ref_text[0] + ref
                 short_url = shortner.shorten(long_url)
                 context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " ecco il tuo link:\n" + short_url["url"])
                 context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
             else:
-                long_url = "https://" + text_message + ref
+                if "https://" in text_message:
+                    long_url = text_message + ref
+                else:
+                    long_url = "https://" + text_message + ref
                 short_url = shortner.shorten(long_url)
                 context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " ecco il tuo link:\n" + short_url["url"])
                 context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
-                
-    
+                    
 dispatcher = updater.dispatcher
 start_handler = CommandHandler("start", start)
 info_handler = CommandHandler("about", about)
