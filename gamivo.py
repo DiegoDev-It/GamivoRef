@@ -5,7 +5,7 @@ from telegram.ext import Filters
 from bitly_api import bitly_api
 import logging
 import os
-ref = "?glv=tejit6ep" #Put your ref in ""
+ref = "" #Put your ref in ""
 shortner = bitly_api.Connection(access_token="a41ddd1af9770b446f5f36b8b09230744bed3114")
 updater = Updater(token="1860763458:AAFi-rJvNt573lNTU7jZjwv-gUL_oD3Qi7o", use_context=True)
 
