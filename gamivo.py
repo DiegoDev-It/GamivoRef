@@ -6,8 +6,8 @@ from bitly_api import bitly_api
 import logging
 import os
 ref = "" #Put your ref in ""
-shortner = bitly_api.Connection(access_token="a41ddd1af9770b446f5f36b8b09230744bed3114")
-updater = Updater(token="1860763458:AAFi-rJvNt573lNTU7jZjwv-gUL_oD3Qi7o", use_context=True)
+shortner = bitly_api.Connection(access_token="") #Put your token in ""
+updater = Updater(token="", use_context=True) #Put your token in ""
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
@@ -16,11 +16,16 @@ def start(update, context):
 def about(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Bot realizzato da @diegoistech")
 def version(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="La verisone attuale è la 1.1a")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="La verisone attuale è la 1.3")
 def github(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="https://github.com/DiegoDev-It/GamivoRef/")
+def send(update, context):
+    user_says = " ".join(context.args)
+    user_sayed = update.message.from_user
+    if user_sayed['username'] == "diegoistech":
+        context.bot.send_message(chat_id=update.effective_chat.id, text=user_says)
 def status(update, context):
-    response = os.system("ping -c 1 " + "192.168.1.21")
+    response = os.system("ping -c 1 " + "") #Put your ip in ""
     if response == 0:
         interno_text = "Stato interno server: " + "✅" + "\n"
     elif response != 0:
@@ -36,23 +41,41 @@ def text(update, context):
     text_message = update.message.text
     lowered_text_message = text_message.lower()
     if "gamivo.com" in lowered_text_message:
-        print(lowered_text_message)
-        if "?glv" in lowered_text_message:
-            ref_text = lowered_text_message.split("?glv")
-            if "https://" in lowered_text_message:
-                long_url = ref_text[0] + ref
-            else:
-                long_url = "https://" + ref_text[0] + ref   
-                short_url = shortner.shorten(long_url)
+        if "https://" in lowered_text_message: #if https
+            if "www.gamivo.com" in lowered_text_message: #if www
+                new_url = lowered_text_message.split("https://www.gamivo.com/product/")
+                if "?" in lowered_text_message:
+                    new_url_1 = new_url[1].split("?")
+                    long_url = "https://gamivo.com/product/" + new_url_1[0] + ref
+                elif "?" not in lowered_text_message:
+                    long_url = "https://gamivo.com" + new_url[0] + ref
+            elif "gamivo.com" in lowered_text_message: #if not www
+                new_url = lowered_text_message.split("https://gamivo.com/product/")
+                if "?" in lowered_text_message:
+                    new_url_1 = new_url[1].split("?")
+                    long_url = "https://www.gamivo.com/product/" + new_url_1[0] + ref
+                elif "?" not in lowered_text_message:
+                    long_url = "https://gamivo.com" + new_url[0] + ref
+            short_url = shortner.shorten(long_url)
             context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " ecco il tuo link:\n" + short_url["url"])
             context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
         else:
-            if "https://" in lowered_text_message:
-                long_url = lowered_text_message + ref
-                short_url = shortner.shorten(long_url)
-            else:
-                long_url = "https://" + lowered_text_message + ref
-                short_url = shortner.shorten(long_url)
+            if "www.gamivo.com" in lowered_text_message: #if www
+                new_url = lowered_text_message.split("www.gamivo.com/product/")
+                if "?" in lowered_text_message:
+                    new_url_1 = new_url[1].split("?")
+                    long_url = "https://www.gamivo.com/product/" + new_url_1[0] + ref
+                elif "?" not in lowered_text_message:
+                    long_url = "https://" + "gamivo.com" + new_url[0] + ref
+            elif "gamivo.com" in lowered_text_message: #if not www
+                new_url = lowered_text_message.split("gamivo.com/product/")
+                if "?" in lowered_text_message:
+                    new_url_1 = new_url[1].split("?")
+                    long_url = "https://www.gamivo.com/product/" + new_url_1[0] + ref
+                elif "?" not in lowered_text_message:
+                    long_url = "https://" + "gamivo.com" + new_url[0] + ref
+            print(long_url)
+            short_url = shortner.shorten(long_url) 
             context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " ecco il tuo link:\n" + short_url["url"])
             context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
                 
@@ -62,13 +85,14 @@ start_handler = CommandHandler("start", start)
 info_handler = CommandHandler("about", about)
 version_handler = CommandHandler("version", version)
 github_handler = CommandHandler("github", github)
+send_handler = CommandHandler("talk", send)
 status_handler = CommandHandler("status", status)
 text_handler = MessageHandler(Filters.text, text)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(info_handler)
 dispatcher.add_handler(version_handler)
 dispatcher.add_handler(github_handler)
+dispatcher.add_handler(send_handler)
 dispatcher.add_handler(status_handler)
 dispatcher.add_handler(text_handler)
 updater.start_polling()
-
