@@ -5,6 +5,9 @@ from telegram.ext import Filters
 from bitly_api import bitly_api
 import logging
 import os
+import re
+short_url_list = [""]
+long_url_list = [""]
 ref = "" #Put your ref in ""
 shortner = bitly_api.Connection(access_token="") #Put your token in ""
 updater = Updater(token="", use_context=True) #Put your token in ""
@@ -41,45 +44,32 @@ def text(update, context):
     text_message = update.message.text
     lowered_text_message = text_message.lower()
     if "gamivo.com" in lowered_text_message:
-        if "https://" in lowered_text_message: #if https
-            if "www.gamivo.com" in lowered_text_message: #if www
-                new_url = lowered_text_message.split("https://www.gamivo.com/product/")
-                if "?" in lowered_text_message:
-                    new_url_1 = new_url[1].split("?")
-                    long_url = "https://gamivo.com/product/" + new_url_1[0] + ref
-                elif "?" not in lowered_text_message:
-                    long_url = "https://gamivo.com" + new_url[0] + ref
-            elif "gamivo.com" in lowered_text_message: #if not www
-                new_url = lowered_text_message.split("https://gamivo.com/product/")
-                if "?" in lowered_text_message:
-                    new_url_1 = new_url[1].split("?")
-                    long_url = "https://www.gamivo.com/product/" + new_url_1[0] + ref
-                elif "?" not in lowered_text_message:
-                    long_url = "https://gamivo.com" + new_url[0] + ref
-            short_url = shortner.shorten(long_url)
-            context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " ecco il tuo link:\n" + short_url["url"])
+        x = re.findall(r"(?:https?://)?(?:www.)?gamivo.com\S*", lowered_text_message)
+        if len(x) > 70:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " il tuo messaggio contiene troppi url.")
             context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
         else:
-            if "www.gamivo.com" in lowered_text_message: #if www
-                new_url = lowered_text_message.split("www.gamivo.com/product/")
-                if "?" in lowered_text_message:
-                    new_url_1 = new_url[1].split("?")
-                    long_url = "https://www.gamivo.com/product/" + new_url_1[0] + ref
-                elif "?" not in lowered_text_message:
-                    long_url = "https://" + "gamivo.com" + new_url[0] + ref
-            elif "gamivo.com" in lowered_text_message: #if not www
-                new_url = lowered_text_message.split("gamivo.com/product/")
-                if "?" in lowered_text_message:
-                    new_url_1 = new_url[1].split("?")
-                    long_url = "https://www.gamivo.com/product/" + new_url_1[0] + ref
-                elif "?" not in lowered_text_message:
-                    long_url = "https://" + "gamivo.com" + new_url[0] + ref
-            print(long_url)
-            short_url = shortner.shorten(long_url) 
-            context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " ecco il tuo link:\n" + short_url["url"])
+            for y in x:
+                long_url_list.append(y)
+                if "https://" in y:
+                    y = y.split("?")[0] + ref
+                    short_url = shortner.shorten(y)
+                elif "http://" in y:
+                    y = y.replace("http://", "https://")
+                    y = y.split("?")[0] + ref
+                    short_url = shortner.shorten(y)
+                else:
+                    y = "https://" + y
+                    y = y.split("?")[0] + ref
+                    short_url = shortner.shorten(y)
+                short_url_list.append(short_url["url"])         
+                for i,j in zip(short_url_list,long_url_list):
+                    lowered_text_message = lowered_text_message.replace(j,i)
+            context.bot.send_message(chat_id=update.effective_chat.id, text="@" + user["username"] + " aveva scritto: " + lowered_text_message)
             context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+            long_url_list.clear()
+            short_url_list.clear()
                 
-    
 dispatcher = updater.dispatcher
 start_handler = CommandHandler("start", start)
 info_handler = CommandHandler("about", about)
